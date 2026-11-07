@@ -1,8 +1,9 @@
-import { StudentSession, LeaderboardEntry } from '../types/quiz';
+import { StudentSession, LeaderboardEntry, Language } from '../types/quiz';
 
 const SESSION_KEY = 'pykids_quiz_session';
 const LEADERBOARD_KEY = 'pykids_leaderboard';
 const SOUND_MUTE_KEY = 'pykids_sound_muted';
+const LANG_KEY = 'pykids_lang';
 
 export const storage = {
   // Session handling
@@ -53,9 +54,7 @@ export const storage = {
   saveLeaderboardEntry: (entry: LeaderboardEntry): LeaderboardEntry[] => {
     try {
       const current = storage.getLeaderboard();
-      // Avoid duplicate exact entry
       const updated = [entry, ...current.filter(item => item.id !== entry.id)];
-      // Keep top 50
       const sorted = updated.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         if (a.completionTimeSeconds !== b.completionTimeSeconds) {
@@ -87,6 +86,23 @@ export const storage = {
     } catch (e) {
       console.warn('LocalStorage error saving sound preference', e);
     }
+  },
+
+  // Language preference
+  getLanguage: (): Language => {
+    try {
+      const saved = localStorage.getItem(LANG_KEY);
+      return (saved === 'en' || saved === 'ar') ? saved : 'ar';
+    } catch {
+      return 'ar';
+    }
+  },
+
+  setLanguage: (lang: Language): void => {
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+    } catch (e) {
+      console.warn('LocalStorage error saving language preference', e);
+    }
   }
 };
-

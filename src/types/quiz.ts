@@ -2,21 +2,27 @@ export type GradeLevel = 'Grade 4' | 'Grade 5' | 'Grade 6';
 
 export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
 
+export type Language = 'en' | 'ar';
+
 export interface Question {
   id: string;
   grade: GradeLevel;
   difficulty: QuestionDifficulty;
   points: number;
   title: string;
-  topic: string; // e.g. "Variables", "If Statements", "If / Else", "Elif"
+  titleArabic?: string;
+  topic: string;
+  topicArabic?: string;
   question: string;
   questionArabic?: string;
   codeSnippet?: string;
   options: string[];
+  optionsArabic?: string[];
   correctIndex: number;
   explanation: string;
   explanationArabic?: string;
   hint?: string;
+  hintArabic?: string;
 }
 
 export interface StudentSession {
@@ -49,6 +55,3 @@ export interface LeaderboardEntry {
 }
 
 export type MascotMood = 'happy' | 'thinking' | 'celebrating' | 'sad' | 'warning' | 'cool';
-
-export type GameMode = 'student' | 'teacher';
-

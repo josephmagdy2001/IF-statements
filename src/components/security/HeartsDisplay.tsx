@@ -5,13 +5,14 @@ import { Heart } from 'lucide-react';
 interface HeartsDisplayProps {
   lives: number; // 0 to 3
   maxLives?: number;
+  label?: string;
 }
 
-export const HeartsDisplay: React.FC<HeartsDisplayProps> = ({ lives, maxLives = 3 }) => {
+export const HeartsDisplay: React.FC<HeartsDisplayProps> = ({ lives, maxLives = 3, label = 'Lives:' }) => {
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border border-rose-500/30 rounded-2xl shadow-inner backdrop-blur-sm">
       <span className="text-xs font-bold uppercase tracking-wider text-rose-400 mr-1 hidden sm:inline">
-        Lives:
+        {label}
       </span>
       <div className="flex items-center gap-1.5">
         {Array.from({ length: maxLives }).map((_, index) => {
@@ -50,4 +51,3 @@ export const HeartsDisplay: React.FC<HeartsDisplayProps> = ({ lives, maxLives = 
     </div>
   );
 };
-

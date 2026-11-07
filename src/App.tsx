@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { GradeLevel, GameMode, StudentSession, LeaderboardEntry, MascotMood } from './types/quiz';
+import { GradeLevel, StudentSession, LeaderboardEntry, MascotMood, Language } from './types/quiz';
 import { QUESTION_BANK } from './data/questions';
 import { storage } from './utils/storage';
+import { translations } from './utils/translations';
 import { soundFx } from './utils/sound';
 import { announcer } from './utils/speech';
 import { useQuizSecurity } from './hooks/useQuizSecurity';
@@ -20,11 +21,13 @@ import { AnswerReviewModal } from './components/quiz/AnswerReviewModal';
 import { VictoryScreen } from './components/results/VictoryScreen';
 import { FailedScreen } from './components/results/FailedScreen';
 import { LeaderboardScreen } from './components/leaderboard/LeaderboardScreen';
-import { TeacherControls } from './components/teacher/TeacherControls';
 
 type AppScreen = 'register' | 'quiz' | 'victory' | 'failed' | 'leaderboard';
 
 export const App: React.FC = () => {
+  // Language & Localization
+  const [lang, setLang] = useState<Language>('ar');
+
   // App Navigation
   const [screen, setScreen] = useState<AppScreen>('register');
   const [previousScreen, setPreviousScreen] = useState<AppScreen>('register');
@@ -34,7 +37,6 @@ export const App: React.FC = () => {
   // Student & Game state
   const [studentName, setStudentName] = useState<string>('');
   const [grade, setGrade] = useState<GradeLevel>('Grade 4');
-  const [gameMode, setGameMode] = useState<GameMode>('student');
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
   const [remainingLives, setRemainingLives] = useState<number>(3);
@@ -48,9 +50,8 @@ export const App: React.FC = () => {
   // Leaderboard data
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  // Filter questions for the selected grade (or all 18 questions starting with that grade's focus)
+  // Filter questions for the selected grade (or all 18 questions prioritizing that grade's focus)
   const currentQuestions = useMemo(() => {
-    // Return all questions, but prioritize the selected grade's questions first, then the others
     const gradeQuestions = QUESTION_BANK.filter(q => q.grade === grade);
     const otherQuestions = QUESTION_BANK.filter(q => q.grade !== grade);
     return [...gradeQuestions, ...otherQuestions];
@@ -62,6 +63,12 @@ export const App: React.FC = () => {
 
   // Initialize from LocalStorage
   useEffect(() => {
+    const savedLang = storage.getLanguage();
+    setLang(savedLang);
+    announcer.setLanguage(savedLang);
+    document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = savedLang;
+
     const muted = storage.isSoundMuted();
     setIsMuted(muted);
     soundFx.setMuted(muted);
@@ -82,9 +89,19 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  // Language toggle handler
+  const toggleLanguage = () => {
+    const nextLang: Language = lang === 'ar' ? 'en' : 'ar';
+    setLang(nextLang);
+    storage.setLanguage(nextLang);
+    announcer.setLanguage(nextLang);
+    document.documentElement.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = nextLang;
+  };
+
   // Save session when relevant state updates
   useEffect(() => {
-    if (screen === 'quiz' && studentName && gameMode === 'student') {
+    if (screen === 'quiz' && studentName) {
       const session: StudentSession = {
         studentName,
         grade,
@@ -101,7 +118,7 @@ export const App: React.FC = () => {
       };
       storage.saveSession(session);
     }
-  }, [screen, studentName, grade, remainingLives, currentIndex, userAnswers, timeSpentSeconds, violationsCount, gameMode]);
+  }, [screen, studentName, grade, remainingLives, currentIndex, userAnswers, timeSpentSeconds, violationsCount]);
 
   // Scoring calculations
   const calculateCurrentScore = useCallback((): number => {
@@ -135,27 +152,24 @@ export const App: React.FC = () => {
     return count;
   }, [currentQuestions, userAnswers]);
 
+  const handleChallengeFailed = useCallback(() => {
+    storage.clearSession();
+    setScreen('failed');
+  }, []);
+
   // Deduct life callback
   const handleDeductLife = useCallback((_reason: string) => {
-    if (gameMode !== 'student') return;
-
     setRemainingLives(prev => {
       const nextLives = Math.max(0, prev - 1);
       if (nextLives === 0) {
-        // Trigger game over
         handleChallengeFailed();
       }
       return nextLives;
     });
     setViolationsCount(prev => prev + 1);
     setMascotMood('warning');
-    setMascotMessage('Careful! Leaving the screen loses a life!');
-  }, [gameMode]);
-
-  const handleChallengeFailed = useCallback(() => {
-    storage.clearSession();
-    setScreen('failed');
-  }, []);
+    setMascotMessage(lang === 'ar' ? 'انتبه! مغادرة الشاشة تستهلك محاولة!' : 'Careful! Leaving the screen loses a life!');
+  }, [lang, handleChallengeFailed]);
 
   // Security Hook
   const {
@@ -166,7 +180,7 @@ export const App: React.FC = () => {
     requestFullscreen,
     exitFullscreen,
   } = useQuizSecurity({
-    enabled: screen === 'quiz' && gameMode === 'student',
+    enabled: screen === 'quiz',
     lives: remainingLives,
     onDeductLife: handleDeductLife,
     onGameOver: handleChallengeFailed,
@@ -189,21 +203,15 @@ export const App: React.FC = () => {
   };
 
   // Start Registration handler
-  const handleRegister = (name: string, selectedGrade: GradeLevel, mode: GameMode) => {
+  const handleRegister = (name: string, selectedGrade: GradeLevel) => {
     setStudentName(name);
     setGrade(selectedGrade);
-    setGameMode(mode);
     setCurrentIndex(0);
     setUserAnswers({});
     setRemainingLives(3);
     setViolationsCount(0);
     resetTimer();
-
-    if (mode === 'student') {
-      setShowStartModal(true);
-    } else {
-      setScreen('quiz');
-    }
+    setShowStartModal(true);
   };
 
   const handleConfirmStart = () => {
@@ -229,32 +237,29 @@ export const App: React.FC = () => {
     const totalQ = currentQuestions.length;
     const percentage = Math.round((correctCount / totalQ) * 100);
 
-    // Save to leaderboard if student mode
-    if (gameMode === 'student') {
-      const entry: LeaderboardEntry = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-        studentName,
-        grade,
-        score,
-        correctCount,
-        incorrectCount,
-        totalQuestions: totalQ,
-        percentage,
-        remainingLives,
-        completionTimeSeconds: timeSpentSeconds,
-        completedAt: new Date().toISOString(),
-      };
-      const updated = storage.saveLeaderboardEntry(entry);
-      setLeaderboard(updated);
-    }
+    const entry: LeaderboardEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      studentName,
+      grade,
+      score,
+      correctCount,
+      incorrectCount,
+      totalQuestions: totalQ,
+      percentage,
+      remainingLives,
+      completionTimeSeconds: timeSpentSeconds,
+      completedAt: new Date().toISOString(),
+    };
+    const updated = storage.saveLeaderboardEntry(entry);
+    setLeaderboard(updated);
 
     storage.clearSession();
     setScreen('victory');
   };
 
   const handleGoHome = () => {
-    if (screen === 'quiz' && gameMode === 'student') {
-      if (!window.confirm('Are you sure you want to leave the challenge and return to the home page?')) {
+    if (screen === 'quiz') {
+      if (!window.confirm(translations[lang].leaveQuizConfirm)) {
         return;
       }
     }
@@ -290,12 +295,13 @@ export const App: React.FC = () => {
   const currentQ = currentQuestions[currentIndex];
 
   return (
-    <div className="min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+    <div className={`min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white ${lang === 'ar' ? 'font-sans' : 'font-sans'}`}>
       {/* Security Warning Modal */}
       <SecurityWarningModal
         isOpen={showWarningModal}
         message={warningMessage}
         remainingLives={remainingLives}
+        lang={lang}
         onDismiss={dismissWarning}
       />
 
@@ -304,6 +310,7 @@ export const App: React.FC = () => {
         <StartChallengeModal
           studentName={studentName}
           grade={grade}
+          lang={lang}
           onStart={handleConfirmStart}
           onCancel={() => setShowStartModal(false)}
         />
@@ -315,6 +322,7 @@ export const App: React.FC = () => {
         onClose={() => setShowReviewModal(false)}
         questions={currentQuestions}
         userAnswers={userAnswers}
+        lang={lang}
       />
 
       {/* Main Header */}
@@ -323,10 +331,11 @@ export const App: React.FC = () => {
         onToggleMute={toggleMute}
         isFullscreen={isFullscreen}
         onToggleFullscreen={toggleFullscreen}
-        gameMode={gameMode}
         lives={remainingLives}
         studentName={screen !== 'register' ? studentName : undefined}
         grade={grade}
+        lang={lang}
+        onToggleLanguage={toggleLanguage}
         onOpenLeaderboard={screen !== 'leaderboard' ? openLeaderboard : undefined}
         onHomeClick={screen !== 'register' ? handleGoHome : undefined}
       />
@@ -337,6 +346,7 @@ export const App: React.FC = () => {
           {screen === 'register' && (
             <RegistrationScreen
               key="register"
+              lang={lang}
               onRegister={handleRegister}
               onOpenLeaderboard={openLeaderboard}
             />
@@ -344,29 +354,17 @@ export const App: React.FC = () => {
 
           {screen === 'quiz' && currentQ && (
             <div key="quiz" className="w-full">
-              {/* Teacher Mode Controls (if active) */}
-              {gameMode === 'teacher' && (
-                <TeacherControls
-                  questions={currentQuestions}
-                  currentIndex={currentIndex}
-                  onSelectQuestion={(idx) => setCurrentIndex(idx)}
-                  onExitTeacherMode={() => {
-                    setGameMode('student');
-                    setRemainingLives(3);
-                  }}
-                />
-              )}
-
               {/* Top Progress & Stats Bar */}
               <ProgressBar
                 currentIndex={currentIndex}
                 total={currentQuestions.length}
                 score={calculateCurrentScore()}
                 timeFormatted={formattedTime}
+                lang={lang}
               />
 
               {/* Side Mascot Floating Buddy */}
-              <div className="hidden lg:block fixed right-6 bottom-8 z-20 pointer-events-none">
+              <div className={`hidden lg:block fixed ${lang === 'ar' ? 'left-6' : 'right-6'} bottom-8 z-20 pointer-events-none`}>
                 <Mascot mood={mascotMood} size="sm" message={mascotMessage} />
               </div>
 
@@ -376,11 +374,11 @@ export const App: React.FC = () => {
                 currentIndex={currentIndex}
                 totalQuestions={currentQuestions.length}
                 selectedOption={userAnswers[currentQ.id]}
+                lang={lang}
                 onSelectOption={handleSelectOption}
                 onNext={() => setCurrentIndex(prev => Math.min(currentQuestions.length - 1, prev + 1))}
                 onPrev={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
                 onSubmit={handleSubmitQuiz}
-                gameMode={gameMode}
                 onMascotMoodChange={(mood, msg) => {
                   setMascotMood(mood);
                   setMascotMessage(msg);
@@ -400,6 +398,7 @@ export const App: React.FC = () => {
               incorrectCount={calculateIncorrectCount()}
               remainingLives={remainingLives}
               completionTimeFormatted={formattedTime}
+              lang={lang}
               onPlayAgain={handlePlayAgain}
               onReviewAnswers={() => setShowReviewModal(true)}
               onViewLeaderboard={openLeaderboard}
@@ -414,6 +413,7 @@ export const App: React.FC = () => {
               grade={grade}
               answeredCount={Object.keys(userAnswers).length}
               totalQuestions={currentQuestions.length}
+              lang={lang}
               onRetry={handlePlayAgain}
               onReviewAnswers={() => setShowReviewModal(true)}
               onGoHome={handleGoHome}
@@ -424,6 +424,7 @@ export const App: React.FC = () => {
             <LeaderboardScreen
               key="leaderboard"
               entries={leaderboard}
+              lang={lang}
               onBack={() => setScreen(previousScreen)}
               onClear={handleClearLeaderboard}
             />
@@ -434,7 +435,9 @@ export const App: React.FC = () => {
       {/* Global Kid-Friendly Footer */}
       <footer className="w-full text-center py-4 border-t border-slate-800/60 text-xs text-slate-500 select-none">
         <p>
-          🐍 Python Kids Interactive Educational Challenge • Built for Grades 4, 5 & 6
+          {lang === 'ar'
+            ? '🐍 تحدي بايثون التفاعلي للأطفال • مخصص للمراحل الابتدائية الصف 4 و 5 و 6'
+            : '🐍 Python Kids Interactive Educational Challenge • Built for Grades 4, 5 & 6'}
         </p>
       </footer>
     </div>

@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Clock } from 'lucide-react';
+import { Language } from '../../types/quiz';
+import { translations } from '../../utils/translations';
 
 interface ProgressBarProps {
   currentIndex: number;
   total: number;
   score: number;
   timeFormatted: string;
+  lang: Language;
 }
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -14,7 +17,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   total,
   score,
   timeFormatted,
+  lang,
 }) => {
+  const t = translations[lang];
   const progressPercent = Math.round(((currentIndex + 1) / total) * 100);
 
   return (
@@ -22,10 +27,10 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       <div className="flex items-center justify-between text-xs md:text-sm font-bold text-slate-300 mb-2">
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-1 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 rounded-xl">
-            Question {currentIndex + 1} of {total}
+            {t.questionLabel} {currentIndex + 1} {t.ofLabel} {total}
           </span>
           <span className="text-slate-400 hidden sm:inline">
-            ({progressPercent}% Completed)
+            ({progressPercent}% {t.completedLabel})
           </span>
         </div>
 
@@ -39,7 +44,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           {/* Current Score */}
           <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl">
             <Trophy className="w-4 h-4 text-amber-400" />
-            <span className="font-black">{score} pts</span>
+            <span className="font-black">{score} {t.ptsLabel}</span>
           </div>
         </div>
       </div>
@@ -59,4 +64,3 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     </div>
   );
 };
-

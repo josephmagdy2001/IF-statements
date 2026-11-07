@@ -1,40 +1,50 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Trophy, BookOpen, GraduationCap, ShieldAlert, ArrowRight, User } from 'lucide-react';
-import { GradeLevel, GameMode } from '../../types/quiz';
+import { Sparkles, Trophy, GraduationCap, ArrowRight, User, Shield } from 'lucide-react';
+import { GradeLevel, Language } from '../../types/quiz';
 import { Mascot } from '../mascot/Mascot';
+import { translations } from '../../utils/translations';
 import { soundFx } from '../../utils/sound';
 
 interface RegistrationScreenProps {
-  onRegister: (name: string, grade: GradeLevel, mode: GameMode) => void;
+  lang: Language;
+  onRegister: (name: string, grade: GradeLevel) => void;
   onOpenLeaderboard: () => void;
 }
 
 export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
+  lang,
   onRegister,
   onOpenLeaderboard,
 }) => {
   const [name, setName] = useState('');
   const [grade, setGrade] = useState<GradeLevel>('Grade 4');
-  const [mode, setMode] = useState<GameMode>('student');
   const [error, setError] = useState<string | null>(null);
+
+  const t = translations[lang];
+
+  const gradeLabels: Record<GradeLevel, { en: string; ar: string }> = {
+    'Grade 4': { en: 'Grade 4 (Easy)', ar: 'الصف الرابع (مبتدئ)' },
+    'Grade 5': { en: 'Grade 5 (Medium)', ar: 'الصف الخامس (متوسط)' },
+    'Grade 6': { en: 'Grade 6 (Hard)', ar: 'الصف السادس (متقدم)' },
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = name.trim();
     if (!cleanName) {
       soundFx.playIncorrect();
-      setError('Please enter your hero name to start!');
+      setError(t.nameErrorEmpty);
       return;
     }
     if (cleanName.length < 2) {
       soundFx.playIncorrect();
-      setError('Name must be at least 2 characters long!');
+      setError(t.nameErrorShort);
       return;
     }
 
     soundFx.playClick();
-    onRegister(cleanName, grade, mode);
+    onRegister(cleanName, grade);
   };
 
   return (
@@ -48,7 +58,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-yellow-500/20 border border-indigo-500/40 rounded-full text-indigo-300 text-xs md:text-sm font-bold shadow-lg backdrop-blur-md">
             <Sparkles className="w-4 h-4 text-yellow-400 animate-spin" />
-            <span>Python If / Else / Elif Master Challenge</span>
+            <span>{t.appBadge}</span>
           </div>
         </motion.div>
 
@@ -59,7 +69,11 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
           transition={{ duration: 0.5 }}
           className="mb-4"
         >
-          <Mascot mood="happy" size="lg" message="Hi! Ready to learn Python with me?" />
+          <Mascot
+            mood="happy"
+            size="lg"
+            message={lang === 'ar' ? 'أهلاً بك يا بطل! جاهز لتعلم بايثون معي؟' : 'Hi! Ready to learn Python with me?'}
+          />
         </motion.div>
 
         {/* Main Card */}
@@ -74,10 +88,10 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
 
           <div className="text-center mb-6">
             <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
-              Python Kids Quiz
+              {t.appName}
             </h1>
             <p className="text-slate-400 text-sm">
-              Level up your programming superpower and solve maze & traffic logic!
+              {t.appSubtitle}
             </p>
           </div>
 
@@ -85,10 +99,10 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             {/* Student Name */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                Your Hero Name:
+                {t.heroNameLabel}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <div className={`absolute inset-y-0 ${lang === 'ar' ? 'right-0 pr-3.5' : 'left-0 pl-3.5'} flex items-center pointer-events-none text-slate-500`}>
                   <User className="w-5 h-5 text-indigo-400" />
                 </div>
                 <input
@@ -98,9 +112,9 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                     setName(e.target.value);
                     if (error) setError(null);
                   }}
-                  placeholder="e.g. Alex, Maya, Omar..."
+                  placeholder={t.heroNamePlaceholder}
                   maxLength={25}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border-2 border-slate-700/80 rounded-2xl text-white placeholder-slate-500 font-bold focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all text-base"
+                  className={`w-full ${lang === 'ar' ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} py-3.5 bg-slate-950/80 border-2 border-slate-700/80 rounded-2xl text-white placeholder-slate-500 font-bold focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all text-base`}
                 />
               </div>
               {error && (
@@ -113,9 +127,9 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             {/* Grade Selection */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                Select Your Grade:
+                {t.selectGrade}
               </label>
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {(['Grade 4', 'Grade 5', 'Grade 6'] as GradeLevel[]).map((g) => {
                   const isSelected = grade === g;
                   return (
@@ -126,68 +140,28 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                         soundFx.playClick();
                         setGrade(g);
                       }}
-                      className={`p-3 rounded-2xl border-2 text-center transition-all ${
+                      className={`p-3.5 rounded-2xl border-2 text-center transition-all ${
                         isSelected
                           ? 'bg-indigo-600/30 border-indigo-500 text-white font-extrabold ring-2 ring-indigo-500/40 shadow-lg'
                           : 'bg-slate-800/60 border-slate-700/60 text-slate-400 font-semibold hover:border-slate-600'
                       }`}
                     >
                       <GraduationCap className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-yellow-400' : 'text-slate-500'}`} />
-                      <div className="text-xs sm:text-sm font-bold">{g}</div>
+                      <div className="text-xs sm:text-sm font-bold">{gradeLabels[g][lang]}</div>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Mode Selection */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                Challenge Mode:
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundFx.playClick();
-                    setMode('student');
-                  }}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all ${
-                    mode === 'student'
-                      ? 'bg-rose-950/40 border-rose-500 text-white font-bold ring-2 ring-rose-500/30'
-                      : 'bg-slate-800/40 border-slate-700/60 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400 mb-1">
-                    <ShieldAlert className="w-4 h-4" />
-                    Student Challenge
-                  </div>
-                  <div className="text-[11px] text-slate-300">
-                    3 Lives & Security Detection
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundFx.playClick();
-                    setMode('teacher');
-                  }}
-                  className={`p-3 rounded-2xl border-2 text-left transition-all ${
-                    mode === 'teacher'
-                      ? 'bg-purple-950/40 border-purple-500 text-white font-bold ring-2 ring-purple-500/30'
-                      : 'bg-slate-800/40 border-slate-700/60 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-400 mb-1">
-                    <BookOpen className="w-4 h-4" />
-                    Teacher Mode
-                  </div>
-                  <div className="text-[11px] text-slate-300">
-                    No Lives, Reveal Answers
-                  </div>
-                </button>
-              </div>
+            {/* Challenge Info Pill (Fixed 3-lives challenge) */}
+            <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-2xl flex items-center gap-2.5 text-xs text-rose-300 font-medium">
+              <Shield className="w-5 h-5 text-rose-400 shrink-0" />
+              <span>
+                {lang === 'ar'
+                  ? 'يبدأ كل طالب بـ 3 قلوب ومحاولات. تجنب مغادرة الشاشة أو تبديل التبويب!'
+                  : 'Every student starts with 3 lives. Avoid switching tabs or leaving the screen!'}
+              </span>
             </div>
 
             {/* Submit Button */}
@@ -195,8 +169,8 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
               type="submit"
               className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white font-black text-lg rounded-2xl shadow-xl transition active:scale-95 flex items-center justify-center gap-2 group"
             >
-              <span>Start Python Adventure</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <span>{t.startBtn}</span>
+              <ArrowRight className={`w-5 h-5 ${lang === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
             </button>
           </form>
 
@@ -210,7 +184,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
               className="text-xs font-bold text-yellow-400 hover:text-yellow-300 inline-flex items-center gap-1.5 transition"
             >
               <Trophy className="w-4 h-4 text-yellow-400" />
-              <span>View Local Hall of Fame Leaderboard</span>
+              <span>{t.viewLeaderboard}</span>
             </button>
           </div>
         </motion.div>
@@ -218,4 +192,3 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
     </div>
   );
 };
-

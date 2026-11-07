@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, XCircle, HelpCircle, Languages } from 'lucide-react';
-import { Question } from '../../types/quiz';
+import { X, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
+import { Question, Language } from '../../types/quiz';
 import { CodeBlock } from './CodeBlock';
+import { translations } from '../../utils/translations';
 import { soundFx } from '../../utils/sound';
 
 interface AnswerReviewModalProps {
@@ -10,6 +11,7 @@ interface AnswerReviewModalProps {
   onClose: () => void;
   questions: Question[];
   userAnswers: Record<string, number>;
+  lang: Language;
 }
 
 export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
@@ -17,10 +19,10 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
   onClose,
   questions,
   userAnswers,
+  lang,
 }) => {
-  const [showArabic, setShowArabic] = useState(false);
-
   if (!isOpen) return null;
+  const t = translations[lang];
 
   return (
     <AnimatePresence>
@@ -36,25 +38,14 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
             <div>
               <h2 className="text-xl font-black text-white flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                Challenge Review & Learning
+                {t.reviewAnswers}
               </h2>
               <p className="text-xs text-slate-400">
-                Detailed breakdown of each question and correct explanation
+                {lang === 'ar' ? 'مراجعة تفصيلية لجميع الأسئلة مع توضيح الإجابات والشرح الصحيح' : 'Detailed breakdown of each question and correct explanation'}
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  soundFx.playClick();
-                  setShowArabic(!showArabic);
-                }}
-                className="px-2.5 py-1.5 bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-300 text-xs font-bold flex items-center gap-1.5"
-              >
-                <Languages className="w-3.5 h-3.5" />
-                <span>{showArabic ? 'English' : 'عربي'}</span>
-              </button>
-
               <button
                 onClick={() => {
                   soundFx.playClick();
@@ -74,6 +65,11 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
               const isAnswered = selectedIdx !== undefined;
               const isCorrect = selectedIdx === q.correctIndex;
 
+              const displayedQuestion = (lang === 'ar' && q.questionArabic) ? q.questionArabic : q.question;
+              const displayedOptions = (lang === 'ar' && q.optionsArabic) ? q.optionsArabic : q.options;
+              const displayedTopic = (lang === 'ar' && q.topicArabic) ? q.topicArabic : q.topic;
+              const displayedExplanation = (lang === 'ar' && q.explanationArabic) ? q.explanationArabic : q.explanation;
+
               return (
                 <div
                   key={q.id}
@@ -92,22 +88,22 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
                         #{qIdx + 1}
                       </span>
                       <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-800 text-slate-300">
-                        {q.grade} • {q.topic}
+                        {q.grade} • {displayedTopic}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 text-xs font-bold">
                       {isCorrect ? (
                         <span className="text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
-                          <CheckCircle2 className="w-4 h-4" /> Correct (+{q.points} pts)
+                          <CheckCircle2 className="w-4 h-4" /> {t.correctAnswers} (+{q.points} {t.ptsLabel})
                         </span>
                       ) : isAnswered ? (
                         <span className="text-rose-400 flex items-center gap-1 bg-rose-500/10 px-2.5 py-1 rounded-xl border border-rose-500/20">
-                          <XCircle className="w-4 h-4" /> Incorrect (0 pts)
+                          <XCircle className="w-4 h-4" /> {t.incorrectAnswers} (0 {t.ptsLabel})
                         </span>
                       ) : (
                         <span className="text-slate-400 flex items-center gap-1 bg-slate-700/40 px-2.5 py-1 rounded-xl">
-                          Not Answered
+                          {lang === 'ar' ? 'لم تتم الإجابة' : 'Not Answered'}
                         </span>
                       )}
                     </div>
@@ -115,20 +111,14 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
 
                   {/* Question Text */}
                   <p className="font-bold text-white text-sm sm:text-base mb-2">
-                    {q.question}
+                    {displayedQuestion}
                   </p>
-
-                  {showArabic && q.questionArabic && (
-                    <p className="text-yellow-300 text-sm font-semibold mb-3 text-right bg-slate-900/40 p-2.5 rounded-xl border border-yellow-500/20" dir="rtl">
-                      {q.questionArabic}
-                    </p>
-                  )}
 
                   {q.codeSnippet && <CodeBlock code={q.codeSnippet} />}
 
                   {/* Options Overview */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 my-3">
-                    {q.options.map((opt, optIdx) => {
+                    {displayedOptions.map((opt, optIdx) => {
                       const isOptionSelected = selectedIdx === optIdx;
                       const isOptionCorrect = optIdx === q.correctIndex;
 
@@ -161,14 +151,9 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
                   <div className="mt-3 p-3 bg-slate-950/80 rounded-xl border border-indigo-500/30 text-xs sm:text-sm text-slate-300">
                     <div className="flex items-center gap-1.5 text-indigo-400 font-bold mb-1">
                       <HelpCircle className="w-4 h-4" />
-                      <span>Explanation:</span>
+                      <span>{lang === 'ar' ? 'التوضيح والشرح:' : 'Explanation:'}</span>
                     </div>
-                    <p>{q.explanation}</p>
-                    {showArabic && q.explanationArabic && (
-                      <p className="mt-1.5 text-yellow-300 font-medium text-right" dir="rtl">
-                        {q.explanationArabic}
-                      </p>
-                    )}
+                    <p>{displayedExplanation}</p>
                   </div>
                 </div>
               );
@@ -184,7 +169,7 @@ export const AnswerReviewModal: React.FC<AnswerReviewModalProps> = ({
               }}
               className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition text-sm"
             >
-              Close Review
+              {t.closeReview}
             </button>
           </div>
         </motion.div>

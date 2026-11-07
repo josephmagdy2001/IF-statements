@@ -13,6 +13,8 @@ import {
   Home
 } from 'lucide-react';
 import { Mascot } from '../mascot/Mascot';
+import { Language } from '../../types/quiz';
+import { translations } from '../../utils/translations';
 import { soundFx } from '../../utils/sound';
 import { announcer } from '../../utils/speech';
 
@@ -25,6 +27,7 @@ interface VictoryScreenProps {
   incorrectCount: number;
   remainingLives: number;
   completionTimeFormatted: string;
+  lang: Language;
   onPlayAgain: () => void;
   onReviewAnswers: () => void;
   onViewLeaderboard: () => void;
@@ -40,11 +43,13 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
   incorrectCount,
   remainingLives,
   completionTimeFormatted,
+  lang,
   onPlayAgain,
   onReviewAnswers,
   onViewLeaderboard,
   onGoHome,
 }) => {
+  const t = translations[lang];
   const percentage = Math.round((correctCount / totalQuestions) * 100);
 
   useEffect(() => {
@@ -90,36 +95,32 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
   const getTierInfo = () => {
     if (percentage >= 90) {
       return {
-        title: "Outstanding! You're a Python Master!",
-        titleAr: 'مذهل! أنت بطل وباحث بايثون الحقيقي!',
+        title: lang === 'ar' ? 'مذهل! أنت عبقري وبطل بايثون الحقيقي!' : "Outstanding! You're a Python Master!",
         color: 'from-amber-400 to-yellow-500',
-        badge: 'Python Grand Master 🏆',
+        badge: lang === 'ar' ? 'خبير بايثون الذهبي 🏆' : 'Python Grand Master 🏆',
         mood: 'cool' as const,
       };
     }
     if (percentage >= 70) {
       return {
-        title: 'Excellent Work!',
-        titleAr: 'عمل ممتاز ورائع جداً!',
+        title: lang === 'ar' ? 'عمل ممتاز ورائع جداً!' : 'Excellent Work!',
         color: 'from-emerald-400 to-teal-500',
-        badge: 'Python Hero ⭐',
+        badge: lang === 'ar' ? 'بطل بايثون المتألق ⭐' : 'Python Hero ⭐',
         mood: 'celebrating' as const,
       };
     }
     if (percentage >= 50) {
       return {
-        title: 'Good Effort! Keep Practicing!',
-        titleAr: 'مجهود رائع! استمر في التدريب وستصل للقمة!',
+        title: lang === 'ar' ? 'مجهود رائع! استمر في التمرين وستصل للقمة!' : 'Good Effort! Keep Practicing!',
         color: 'from-blue-400 to-indigo-500',
-        badge: 'Python Adventurer 🚀',
+        badge: lang === 'ar' ? 'مغامر بايثون 🚀' : 'Python Adventurer 🚀',
         mood: 'happy' as const,
       };
     }
     return {
-      title: 'Keep Learning! Never Give Up!',
-      titleAr: 'واصل التعلم ولا تستسلم أبداً!',
+      title: lang === 'ar' ? 'واصل التعلم ولا تستسلم أبداً!' : 'Keep Learning! Never Give Up!',
       color: 'from-purple-400 to-pink-500',
-      badge: 'Python Explorer 🧭',
+      badge: lang === 'ar' ? 'مستكشف بايثون 🧭' : 'Python Explorer 🧭',
       mood: 'thinking' as const,
     };
   };
@@ -139,7 +140,11 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
 
         {/* Mascot */}
         <div className="flex justify-center -mt-2 mb-2">
-          <Mascot mood={tier.mood} size="md" message={`Proud of you, ${studentName}!`} />
+          <Mascot
+            mood={tier.mood}
+            size="md"
+            message={lang === 'ar' ? `فخور بك جداً يا ${studentName}!` : `Proud of you, ${studentName}!`}
+          />
         </div>
 
         {/* Congratulations header */}
@@ -148,15 +153,12 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           <span>{tier.badge}</span>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-1">
-          Congratulations, Python Hero!
+        <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+          {lang === 'ar' ? `مبروك يا بطل بايثون، ${studentName}!` : `Congratulations, Python Hero ${studentName}!`}
         </h1>
 
-        <p className={`text-lg md:text-xl font-bold bg-gradient-to-r ${tier.color} bg-clip-text text-transparent mb-1`}>
+        <p className={`text-lg md:text-xl font-bold bg-gradient-to-r ${tier.color} bg-clip-text text-transparent mb-6`}>
           {tier.title}
-        </p>
-        <p className="text-xs md:text-sm text-slate-400 mb-6 font-medium">
-          {tier.titleAr}
         </p>
 
         {/* Stats Grid */}
@@ -164,25 +166,25 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           {/* Final Score */}
           <div className="p-3.5 bg-slate-950/70 border border-amber-500/30 rounded-2xl">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              Final Score
+              {t.finalScore}
             </span>
             <span className="text-2xl font-black text-amber-400">{score}</span>
-            <span className="text-xs text-slate-500 block">points</span>
+            <span className="text-xs text-slate-500 block">{t.ptsLabel}</span>
           </div>
 
           {/* Accuracy Percentage */}
           <div className="p-3.5 bg-slate-950/70 border border-emerald-500/30 rounded-2xl">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              Accuracy
+              {t.accuracy}
             </span>
             <span className="text-2xl font-black text-emerald-400">{percentage}%</span>
-            <span className="text-xs text-slate-500 block">{correctCount}/{totalQuestions} correct</span>
+            <span className="text-xs text-slate-500 block">{correctCount}/{totalQuestions} {t.correctAnswers}</span>
           </div>
 
           {/* Remaining Lives */}
           <div className="p-3.5 bg-slate-950/70 border border-rose-500/30 rounded-2xl">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              Lives Left
+              {t.livesLabel}
             </span>
             <div className="flex items-center justify-center gap-1 my-1">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -202,13 +204,13 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
           {/* Time Taken */}
           <div className="p-3.5 bg-slate-950/70 border border-sky-500/30 rounded-2xl">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-              Total Time
+              {t.totalTime}
             </span>
             <div className="flex items-center justify-center gap-1 text-sky-400 my-1 font-mono text-xl font-bold">
               <Clock className="w-4 h-4" />
               <span>{completionTimeFormatted}</span>
             </div>
-            <span className="text-xs text-slate-500 block">minutes:seconds</span>
+            <span className="text-xs text-slate-500 block">{lang === 'ar' ? 'دقيقة : ثانية' : 'minutes:seconds'}</span>
           </div>
         </div>
 
@@ -216,16 +218,16 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
         <div className="flex items-center justify-center gap-6 p-3 bg-slate-800/40 rounded-2xl mb-6 text-sm font-semibold">
           <div className="flex items-center gap-1.5 text-emerald-400">
             <CheckCircle2 className="w-4 h-4" />
-            <span>Correct: {correctCount}</span>
+            <span>{t.correctAnswers}: {correctCount}</span>
           </div>
           <div className="h-4 w-px bg-slate-700" />
           <div className="flex items-center gap-1.5 text-rose-400">
             <XCircle className="w-4 h-4" />
-            <span>Incorrect: {incorrectCount}</span>
+            <span>{t.incorrectAnswers}: {incorrectCount}</span>
           </div>
           <div className="h-4 w-px bg-slate-700" />
           <div className="text-slate-400">
-            Grade: <span className="text-white font-bold">{grade}</span>
+            {lang === 'ar' ? 'المرحلة:' : 'Grade:'} <span className="text-white font-bold">{grade}</span>
           </div>
         </div>
 
@@ -239,7 +241,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
             className="py-3 px-4 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <Home className="w-4 h-4 text-sky-400" />
-            <span>Home Page</span>
+            <span>{t.homePage}</span>
           </button>
 
           <button
@@ -250,7 +252,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
             className="py-3 px-4 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <BookOpen className="w-4 h-4 text-indigo-400" />
-            <span>Review Answers</span>
+            <span>{t.reviewAnswers}</span>
           </button>
 
           <button
@@ -261,7 +263,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
             className="py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <Trophy className="w-4 h-4 text-yellow-400" />
-            <span>Leaderboard</span>
+            <span>{t.leaderboardTitle}</span>
           </button>
 
           <button
@@ -272,11 +274,10 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
             className="py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Play Again</span>
+            <span>{t.playAgain}</span>
           </button>
         </div>
       </motion.div>
     </div>
   );
 };
-
