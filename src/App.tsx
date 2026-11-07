@@ -433,11 +433,17 @@ export const App: React.FC = () => {
       </main>
 
       {/* Global Kid-Friendly Footer */}
-      <footer className="w-full text-center py-4 border-t border-slate-800/60 text-xs text-slate-500 select-none">
-        <p>
+      <footer className="w-full text-center py-4 border-t border-slate-800/60 text-xs text-slate-400 select-none">
+        <p className="mb-1 text-slate-400">
           {lang === 'ar'
             ? '🐍 تحدي بايثون التفاعلي للأطفال • مخصص للمراحل الابتدائية الصف 4 و 5 و 6'
             : '🐍 Python Kids Interactive Educational Challenge • Built for Grades 4, 5 & 6'}
+        </p>
+        <p className="font-medium text-slate-300 flex items-center justify-center gap-1.5 flex-wrap">
+          <span>Developed with ❤️ by</span>
+          <span className="text-yellow-400 font-bold tracking-wide">Joseph Magdy</span>
+          <span className="text-slate-500">•</span>
+          <span className="text-indigo-400 font-semibold">Software Engineer</span>
         </p>
       </footer>
     </div>

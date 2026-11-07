@@ -1,9 +1,19 @@
-// Web Speech API Voice Announcements for Kids Interactive Quiz (Bilingual EN/AR)
+// Instant-response Web Speech API Voice Announcements for Kids Interactive Quiz (Bilingual EN/AR)
 import { Language } from '../types/quiz';
 
 class VoiceAnnouncer {
   private isMuted: boolean = false;
-  private currentLang: Language = 'en';
+  private currentLang: Language = 'ar';
+  private cachedVoices: SpeechSynthesisVoice[] = [];
+
+  constructor() {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      this.cachedVoices = window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        this.cachedVoices = window.speechSynthesis.getVoices();
+      };
+    }
+  }
 
   public setMuted(muted: boolean) {
     this.isMuted = muted;
@@ -16,20 +26,25 @@ class VoiceAnnouncer {
     this.currentLang = lang;
   }
 
-  public speak(text: string, rate: number = 1.0, pitch: number = 1.1) {
+  public speak(text: string, rate: number = 1.25, pitch: number = 1.1) {
     if (this.isMuted) return;
-    if (!('speechSynthesis' in window)) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     try {
-      // Cancel previous speech to prevent overlapping audio
+      // 1. Immediately cancel any pending speech
       window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = rate;
-      utterance.pitch = pitch;
-      utterance.volume = 0.95;
+      // 2. Resume in case browser suspended speech engine (fixes Chrome/Edge delay)
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
 
-      const voices = window.speechSynthesis.getVoices();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = rate; // fast speech for snappy game feel
+      utterance.pitch = pitch;
+      utterance.volume = 1.0;
+
+      const voices = this.cachedVoices.length > 0 ? this.cachedVoices : window.speechSynthesis.getVoices();
 
       if (this.currentLang === 'ar') {
         utterance.lang = 'ar-SA';
@@ -45,6 +60,7 @@ class VoiceAnnouncer {
         }
       }
 
+      // 3. Fire immediately
       window.speechSynthesis.speak(utterance);
     } catch (e) {
       console.warn('Speech synthesis error', e);
@@ -54,57 +70,59 @@ class VoiceAnnouncer {
   public announceCorrect() {
     if (this.currentLang === 'ar') {
       const praisesAr = [
-        'أحسنت! إجابة صحيحة وممتازة!',
-        'رائع جداً يا بطل بايثون!',
-        'إجابة عبقرية! برافو!',
-        'ممتاز جداً! استمر هكذا!'
+        'أحسنت!',
+        'ممتاز!',
+        'رائع يا بطل!',
+        'برافو عليك!',
+        'إجابة صحيحة!'
       ];
       const chosen = praisesAr[Math.floor(Math.random() * praisesAr.length)];
-      this.speak(chosen, 1.0, 1.1);
+      this.speak(chosen, 1.3, 1.15);
     } else {
-      const praisesEn = ['Good Job!', 'Excellent!', 'Awesome!', 'Brilliant!'];
+      const praisesEn = ['Great job!', 'Awesome!', 'Brilliant!', 'Correct!', 'Super!'];
       const chosen = praisesEn[Math.floor(Math.random() * praisesEn.length)];
-      this.speak(chosen, 1.05, 1.2);
+      this.speak(chosen, 1.25, 1.2);
     }
   }
 
   public announceIncorrect() {
     if (this.currentLang === 'ar') {
       const encouragementsAr = [
-        'إجابة غير صحيحة! حاول مرة أخرى!',
-        'لا بأس يا بطل، راجع الشرح وركز جيداً!',
-        'قريب جداً! استمر ولا تستسلم!'
+        'إجابة خاطئة!',
+        'حاول مجدداً!',
+        'ركز يا بطل!',
+        'لا بأس، حاول ثانية!'
       ];
       const chosen = encouragementsAr[Math.floor(Math.random() * encouragementsAr.length)];
-      this.speak(chosen, 1.0, 1.0);
+      this.speak(chosen, 1.25, 1.05);
     } else {
-      const encouragementsEn = ['Oops! Try again!', 'Almost there! Keep going!', "Don't worry! You can do it!"];
+      const encouragementsEn = ['Try again!', 'Keep going!', 'Almost!', 'Focus hero!'];
       const chosen = encouragementsEn[Math.floor(Math.random() * encouragementsEn.length)];
-      this.speak(chosen, 0.95, 1.0);
+      this.speak(chosen, 1.2, 1.0);
     }
   }
 
   public announceLifeLost() {
     if (this.currentLang === 'ar') {
-      this.speak('تحذير! لقد خسرت محاولة واحدة بسبب مغادرة الشاشة!', 1.0, 1.0);
+      this.speak('انتبه! خسرت محاولة!', 1.25, 1.0);
     } else {
-      this.speak('Warning! You lost one life!', 1.0, 1.05);
+      this.speak('Warning! One life lost!', 1.25, 1.05);
     }
   }
 
   public announceVictory() {
     if (this.currentLang === 'ar') {
-      this.speak('مبروك يا بطل بايثون! لقد أنجزت التحدي ببراعة وتفوق!', 1.0, 1.1);
+      this.speak('مبروك يا بطل بايثون! فوز عظيم!', 1.2, 1.15);
     } else {
-      this.speak('Congratulations, Python Hero! Fantastic work!', 1.05, 1.2);
+      this.speak('Congratulations Python Hero! You won!', 1.2, 1.2);
     }
   }
 
   public announceFailure() {
     if (this.currentLang === 'ar') {
-      this.speak('انتهت المحاولات! لا تحزن يا بطل، حاول مرة أخرى وستنجح!', 1.0, 1.0);
+      this.speak('انتهت المحاولات! حاول ثانية!', 1.2, 1.0);
     } else {
-      this.speak("Challenge failed! Don't give up, try again!", 0.95, 1.0);
+      this.speak('Challenge failed! Try again!', 1.2, 1.0);
     }
   }
 }
