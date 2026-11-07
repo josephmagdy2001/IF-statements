@@ -3,7 +3,6 @@ import { AnimatePresence } from 'framer-motion';
 import { GradeLevel, StudentSession, LeaderboardEntry, MascotMood, Language } from './types/quiz';
 import { QUESTION_BANK } from './data/questions';
 import { storage } from './utils/storage';
-import { translations } from './utils/translations';
 import { soundFx } from './utils/sound';
 import { announcer } from './utils/speech';
 import { useQuizSecurity } from './hooks/useQuizSecurity';
@@ -11,6 +10,7 @@ import { useQuizTimer } from './hooks/useQuizTimer';
 
 // Components
 import { Header } from './components/common/Header';
+import { ConfirmToast } from './components/common/ConfirmToast';
 import { Mascot } from './components/mascot/Mascot';
 import { RegistrationScreen } from './components/registration/RegistrationScreen';
 import { StartChallengeModal } from './components/security/StartChallengeModal';
@@ -33,6 +33,7 @@ export const App: React.FC = () => {
   const [previousScreen, setPreviousScreen] = useState<AppScreen>('register');
   const [showStartModal, setShowStartModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Student & Game state
   const [studentName, setStudentName] = useState<string>('');
@@ -257,19 +258,23 @@ export const App: React.FC = () => {
     setScreen('victory');
   };
 
-  const handleGoHome = () => {
-    if (screen === 'quiz') {
-      if (!window.confirm(translations[lang].leaveQuizConfirm)) {
-        return;
-      }
-    }
+  const doGoHome = useCallback(() => {
     storage.clearSession();
     setCurrentIndex(0);
     setUserAnswers({});
     setRemainingLives(3);
     setViolationsCount(0);
     resetTimer();
+    setShowExitConfirm(false);
     setScreen('register');
+  }, [resetTimer]);
+
+  const handleGoHome = () => {
+    if (screen === 'quiz') {
+      setShowExitConfirm(true);
+      return;
+    }
+    doGoHome();
   };
 
   const handlePlayAgain = () => {
@@ -323,6 +328,14 @@ export const App: React.FC = () => {
         questions={currentQuestions}
         userAnswers={userAnswers}
         lang={lang}
+      />
+
+      {/* Exit Quiz Confirmation Toast */}
+      <ConfirmToast
+        isOpen={showExitConfirm}
+        lang={lang}
+        onConfirm={doGoHome}
+        onCancel={() => setShowExitConfirm(false)}
       />
 
       {/* Main Header */}

@@ -195,3 +195,4 @@ export const translations: Record<Language, Translations> = {
     leaveQuizConfirm: 'Are you sure you want to leave the challenge and return to the home page? Your attempt will be cancelled.',
   }
 };
+

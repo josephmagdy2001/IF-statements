@@ -23,10 +23,11 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
 
   const t = translations[lang];
 
-  const gradeLabels: Record<GradeLevel, { en: string; ar: string }> = {
-    'Grade 4': { en: 'Grade 4 (Easy)', ar: 'الصف الرابع (مبتدئ)' },
-    'Grade 5': { en: 'Grade 5 (Medium)', ar: 'الصف الخامس (متوسط)' },
-    'Grade 6': { en: 'Grade 6 (Hard)', ar: 'الصف السادس (متقدم)' },
+  const gradeLabel = (g: GradeLevel): string => {
+    if (lang === 'ar') {
+      return g === 'Grade 4' ? 'الصف 4' : g === 'Grade 5' ? 'الصف 5' : 'الصف 6';
+    }
+    return g; // "Grade 4" / "Grade 5" / "Grade 6"
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -129,7 +130,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 {t.selectGrade}
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 gap-2">
                 {(['Grade 4', 'Grade 5', 'Grade 6'] as GradeLevel[]).map((g) => {
                   const isSelected = grade === g;
                   return (
@@ -140,14 +141,14 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                         soundFx.playClick();
                         setGrade(g);
                       }}
-                      className={`p-3.5 rounded-2xl border-2 text-center transition-all ${
+                      className={`p-2.5 sm:p-3 rounded-2xl border-2 text-center transition-all ${
                         isSelected
                           ? 'bg-indigo-600/30 border-indigo-500 text-white font-extrabold ring-2 ring-indigo-500/40 shadow-lg'
                           : 'bg-slate-800/60 border-slate-700/60 text-slate-400 font-semibold hover:border-slate-600'
                       }`}
                     >
-                      <GraduationCap className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-yellow-400' : 'text-slate-500'}`} />
-                      <div className="text-xs sm:text-sm font-bold">{gradeLabels[g][lang]}</div>
+                      <GraduationCap className={`w-4 h-4 mx-auto mb-1 ${isSelected ? 'text-yellow-400' : 'text-slate-500'}`} />
+                      <div className="text-xs font-bold">{gradeLabel(g)}</div>
                     </button>
                   );
                 })}
@@ -167,7 +168,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white font-black text-lg rounded-2xl shadow-xl transition active:scale-95 flex items-center justify-center gap-2 group"
+              className="w-full py-2.5 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 hover:from-blue-700 hover:to-emerald-600 text-white font-black text-sm sm:text-lg rounded-2xl shadow-xl transition active:scale-95 flex items-center justify-center gap-2 group"
             >
               <span>{t.startBtn}</span>
               <ArrowRight className={`w-5 h-5 ${lang === 'ar' ? 'rotate-180 group-hover:-translate-x-1' : 'group-hover:translate-x-1'} transition-transform`} />
