@@ -14,6 +14,7 @@ interface HeaderProps {
   studentName?: string;
   grade?: string;
   onOpenLeaderboard?: () => void;
+  onHomeClick?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,17 +27,27 @@ export const Header: React.FC<HeaderProps> = ({
   studentName,
   grade,
   onOpenLeaderboard,
+  onHomeClick,
 }) => {
   return (
     <header className="w-full max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3 border-b border-slate-800/80 mb-4 select-none">
-      {/* Brand */}
-      <div className="flex items-center gap-2.5">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-yellow-400 p-0.5 shadow-lg flex items-center justify-center">
+      {/* Brand Logo - Click to go Home */}
+      <div
+        onClick={() => {
+          if (onHomeClick) {
+            soundFx.playClick();
+            onHomeClick();
+          }
+        }}
+        className={`flex items-center gap-2.5 ${onHomeClick ? 'cursor-pointer group hover:opacity-90 active:scale-95 transition-all' : ''}`}
+        title={onHomeClick ? 'Go to Home Page' : 'PyKids Quiz'}
+      >
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-yellow-400 p-0.5 shadow-lg flex items-center justify-center group-hover:shadow-indigo-500/25 transition-all">
           <span className="text-xl">🐍</span>
         </div>
         <div>
           <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-1.5">
-            PyKids <span className="text-yellow-400 font-extrabold text-xs uppercase px-1.5 py-0.5 bg-yellow-400/10 rounded-md border border-yellow-400/20">Quiz</span>
+            PyKids <span className="text-yellow-400 font-extrabold text-xs uppercase px-1.5 py-0.5 bg-yellow-400/10 rounded-md border border-yellow-400/20 group-hover:bg-yellow-400/20 transition-all">Quiz</span>
           </h1>
           <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
             Python If / Else / Elif Adventures

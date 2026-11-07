@@ -252,6 +252,21 @@ export const App: React.FC = () => {
     setScreen('victory');
   };
 
+  const handleGoHome = () => {
+    if (screen === 'quiz' && gameMode === 'student') {
+      if (!window.confirm('Are you sure you want to leave the challenge and return to the home page?')) {
+        return;
+      }
+    }
+    storage.clearSession();
+    setCurrentIndex(0);
+    setUserAnswers({});
+    setRemainingLives(3);
+    setViolationsCount(0);
+    resetTimer();
+    setScreen('register');
+  };
+
   const handlePlayAgain = () => {
     storage.clearSession();
     setCurrentIndex(0);
@@ -313,6 +328,7 @@ export const App: React.FC = () => {
         studentName={screen !== 'register' ? studentName : undefined}
         grade={grade}
         onOpenLeaderboard={screen !== 'leaderboard' ? openLeaderboard : undefined}
+        onHomeClick={screen !== 'register' ? handleGoHome : undefined}
       />
 
       {/* Content Container */}
@@ -387,6 +403,7 @@ export const App: React.FC = () => {
               onPlayAgain={handlePlayAgain}
               onReviewAnswers={() => setShowReviewModal(true)}
               onViewLeaderboard={openLeaderboard}
+              onGoHome={handleGoHome}
             />
           )}
 
@@ -399,6 +416,7 @@ export const App: React.FC = () => {
               totalQuestions={currentQuestions.length}
               onRetry={handlePlayAgain}
               onReviewAnswers={() => setShowReviewModal(true)}
+              onGoHome={handleGoHome}
             />
           )}
 

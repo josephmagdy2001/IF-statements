@@ -9,7 +9,8 @@ import {
   RotateCcw,
   BookOpen,
   Heart,
-  Clock
+  Clock,
+  Home
 } from 'lucide-react';
 import { Mascot } from '../mascot/Mascot';
 import { soundFx } from '../../utils/sound';
@@ -27,6 +28,7 @@ interface VictoryScreenProps {
   onPlayAgain: () => void;
   onReviewAnswers: () => void;
   onViewLeaderboard: () => void;
+  onGoHome: () => void;
 }
 
 export const VictoryScreen: React.FC<VictoryScreenProps> = ({
@@ -41,6 +43,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
   onPlayAgain,
   onReviewAnswers,
   onViewLeaderboard,
+  onGoHome,
 }) => {
   const percentage = Math.round((correctCount / totalQuestions) * 100);
 
@@ -227,13 +230,24 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              onGoHome();
+            }}
+            className="py-3 px-4 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
+          >
+            <Home className="w-4 h-4 text-sky-400" />
+            <span>Home Page</span>
+          </button>
+
           <button
             onClick={() => {
               soundFx.playClick();
               onReviewAnswers();
             }}
-            className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
+            className="py-3 px-4 bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <BookOpen className="w-4 h-4 text-indigo-400" />
             <span>Review Answers</span>
@@ -244,7 +258,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
               soundFx.playClick();
               onViewLeaderboard();
             }}
-            className="flex-1 py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
+            className="py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <Trophy className="w-4 h-4 text-yellow-400" />
             <span>Leaderboard</span>
@@ -255,7 +269,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
               soundFx.playClick();
               onPlayAgain();
             }}
-            className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm"
+            className="py-3 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm"
           >
             <RotateCcw className="w-4 h-4" />
             <span>Play Again</span>

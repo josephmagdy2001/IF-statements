@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, RotateCcw, BookOpen, AlertOctagon } from 'lucide-react';
+import { ShieldAlert, RotateCcw, BookOpen, AlertOctagon, Home } from 'lucide-react';
 import { Mascot } from '../mascot/Mascot';
 import { soundFx } from '../../utils/sound';
 import { announcer } from '../../utils/speech';
@@ -12,6 +12,7 @@ interface FailedScreenProps {
   totalQuestions: number;
   onRetry: () => void;
   onReviewAnswers: () => void;
+  onGoHome: () => void;
 }
 
 export const FailedScreen: React.FC<FailedScreenProps> = ({
@@ -21,6 +22,7 @@ export const FailedScreen: React.FC<FailedScreenProps> = ({
   totalQuestions,
   onRetry,
   onReviewAnswers,
+  onGoHome,
 }) => {
   useEffect(() => {
     soundFx.playWarning();
@@ -73,16 +75,27 @@ export const FailedScreen: React.FC<FailedScreenProps> = ({
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              onGoHome();
+            }}
+            className="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
+          >
+            <Home className="w-4 h-4 text-sky-400" />
+            <span>Home Page</span>
+          </button>
+
           {answeredCount > 0 && (
             <button
               onClick={() => {
                 soundFx.playClick();
                 onReviewAnswers();
               }}
-              className="flex-1 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
+              className="py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 text-sm"
             >
               <BookOpen className="w-4 h-4 text-indigo-400" />
-              <span>Review Reached Questions</span>
+              <span>Review Reached</span>
             </button>
           )}
 
